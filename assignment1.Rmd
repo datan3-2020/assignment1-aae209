@@ -1,7 +1,7 @@
 ---
 title: "Statistical assignment 1"
-author: "[add your name and candidate number here]"
-date: "[add date here]"
+author: "Alhussein Elrayah, Student No: 670037045"
+date: "11/02/2020"
 output: github_document
 ---
 
@@ -30,7 +30,7 @@ Complete the code below to select those variables from the data frame and save t
 
 ```{r}
 Data <- Data %>%
-Data.sel <- select(pidp, h_eumem, h_sex_dv, h_age_dv, h_memorig)
+select(pidp, h_eumem, h_sex_dv, h_age_dv, h_memorig)
 
 ## Note: Drop the h from each one above
 ```
@@ -69,29 +69,22 @@ In all cases, we want to create new variables.
 
 ## Recoding to create new EU variable
 
-Data <- Data %>%
-        mutate(Data.sel,
-          EU = case_when(
-                 Data$h_umem == 1 ~ "1",
-                 Data$h_eumem == 2 ~ "0",
-                 Data$h_eumem != 1 | eumem != 2 ~ "NA"
-        ))
+Data %>%
+mutate(EU = ifelse(h_eumem == 1, "1", ifelse(h_eumem == 2, "0", NA))) %>%
 
 ## Recoding to create new character vector sex variable
 
-mutate(Data.sel,
-               sex = ifelse(h_sex_dv == 1, "Male",ifelse(h_sex_dv == 2, "Female", NA)))
-                 
-## Recoding to create new categorical age variable   
+mutate(sex = ifelse(h_sex_dv == 1, "Male",ifelse(h_sex_dv == 2, "Female", NA))) %>%
 
-        mutate(Data.sel,
-               agegr = case_when(
+## Recoding to create new categorical age variable
+
+mutate(agegr = case_when(
                  between(h_age_dv, 16, 25) ~ "16 to 25 years",
                  between(h_age_dv, 26, 40) ~ "26 to 40 years",
                  between(h_age_dv, 41, 55) ~ "41 to 55 years",
                  between(h_age_dv, 56, 70) ~ "56 to 70 years",
                  h_age_dv > 70 ~ "Over 70 years"
-        ))
+        )) 
 
 ```
 
@@ -103,19 +96,32 @@ Let us **dplyr** to calculate how many people in the sample supported Remain and
 
 library(dplyr)
 
-data(Data.sel)
+Data  %>%
+  mutate(EU = ifelse(h_eumem == 1, "1", ifelse(h_eumem == 2, "0", NA))) %>%
+group_by(EU) %>%
+summarise(n = n())
 
-dpData <- tbl_df(Data.sel)
+## Finding the proportions
 
-Data.sel %>%
-group_by(dpData, EU) %>%
-  summarise(n = n())
+11118/22957 ## 48.4% of respondents voted Remain
 
-        ...
+9338/22957 ## 40.7% of respondents voted Leave
+
+
+
+
         
 ```
 
+
 Write a couple of sentences with the interpretation of this result. How this compares with the result of the 2016 referendum? Why?
+
+In the 2016 referednum, 51.9% voted to leave and 48.1% voted to remain. The results of the questionnaire are 
+close to the actual result of the referendum in terms of the remain vote but fall short of more than 10
+percentage points from the leave vote. It is possible this can be attributed in part to the NA category. Also,
+leave voters may live in areas which are harder to reach (more rural) for those conducting the survey for more urban-dwelling remian voters.
+
+(Source: https://www.bbc.co.uk/news/politics/eu_referendum/results)
 
 ## Summarise data by sex and age (30 points)
 
@@ -124,24 +130,58 @@ Now let us look at the support for Leave and Remain by sex and age. Use your new
 
 ```{r}
 
-data(Data.sel)
+## For Sex
 
-dpData <- tbl_df(Data.sel)
+Data  %>%
+  mutate(EU = ifelse(h_eumem == 1, "1", ifelse(h_eumem == 2, "0", NA))) %>%
+  mutate(sex = ifelse(h_sex_dv == 1, "Male",ifelse(h_sex_dv == 2, "Female", NA)))%>%
+group_by(EU, sex) %>%
+summarise(n = n())
 
-## For sex
+## Finding proportions for those supporting leave
 
-group_by(dpData, EU,sex) %>%
-  summarise(n = n())
+4859/(4859+6371) ## Female
 
-## For age
+4479/(4746+4479) ## Male
 
-group_by(dpData, EU,agegr) %>%
-  summarise(n = n())
+## For Age
 
-Data %>%
+Data  %>%
+  mutate(EU = ifelse(h_eumem == 1, "1", ifelse(h_eumem == 2, "0", NA))) %>%
+  mutate(agegr = case_when(
+                 between(h_age_dv, 16, 25) ~ "16 to 25 years",
+                 between(h_age_dv, 26, 40) ~ "26 to 40 years",
+                 between(h_age_dv, 41, 55) ~ "41 to 55 years",
+                 between(h_age_dv, 56, 70) ~ "56 to 70 years",
+                 h_age_dv > 70 ~ "Over 70 years"
+        )) %>%
+group_by(EU, agegr) %>%
+summarise(n = n())
+
+## Finding proportions for those supporting leave
+
+736/(1749+736)
+
+1508/(1508+2440)
+
+2509/(2509+3013)
+
+2737/(2646+2737)
+
+1821/(1270+1821)
+
+
         ...
-        
+    
 ```
 
 
 Write a couple of sentences interpreting your results.
+
+Sex: There is a slightly higher proportion for support for leave for males when compared to females with a
+difference of 5% between the groups. This is not signficant enough difference to identify a pattern of voting
+with regards to the sex variable.
+
+Age: The proportion of those supporting leave seems to increase as the you go from the younger age categories to
+the higher age categories. For instance, the category of 16-25 had a 30% support for leave while the category of 
+56-70 had 51% supporting leave. This implies a lower support for remain for older categories.
